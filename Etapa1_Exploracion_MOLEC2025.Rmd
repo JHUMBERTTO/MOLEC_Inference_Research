@@ -1,0 +1,36 @@
+---
+title: "Etapa 1: Exploración de los datos MOLEC 2025"
+author: "Equipo 1 (jorge,efrain,ian,oscar,lars)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+lang: es
+geometry: margin=2cm
+---
+
+```{r setup, include=FALSE}
+echo_code <- TRUE
+knitr::opts_chunk$set(echo = echo_code)
+```
+
+**Pregunta que vamos a investigar:** ¿Cómo impacta la falta de hábitos de lectura desde la infancia sobre el nivel de escolaridad alcanzado, la comprensión lectora y la retención de atención?
+
+# Lectura de los datos
+
+```{r lectura}
+datos <- read.csv("Modeling Data 2025.csv")
+dim(datos)
+str(datos)
+```
+
+# Subconjunto de datos
+
+```{r subconjunto}
+vars <- c("m_p38a", "m_p38b", "m_p38c", "m_p38d", "m_p38d_1", "m_p39_1", "m_p39_4",
+          "m_p32", "m_p33", "m_p34_1", "m_p34_2", "m_p35", "m_p36_2", "niv", "sexo", "edad")
+datos_equipo <- datos[vars]
+dim(datos_equipo)
+head(datos_equipo)
+write.csv(datos_equipo, "DatosEquipo1_2025.csv", row.names = FALSE)
+```
