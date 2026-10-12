@@ -1,0 +1,148 @@
+---
+title: "Impacto del nivel educativo sobre la lectura"
+author: "Ian Castillo A00843643"
+date: "2026-10-11"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+## Librerias y carga de dataset MOLEC 2025
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+installed.packages("readr")
+installed.packages("fdth")
+library(fdth)
+library(readr)
+MOLEC <- read_csv("C:/Users/ianuc/Downloads/MOLEC_2025_limpia.csv")
+
+#::::: Columnas/categorias relevantes :::::
+sexo <- MOLEC[, c("sexo")]
+nivel_edu <- MOLEC[, c("niv")]
+lectura <- MOLEC[, c("m_p32", "m_p33", "m_p36_2")]
+```
+
+## Nivel educativo y sexo de encuestados
+#### Cantidad hombres y mujeres
+```{r}
+####::::: Frecuencia de sexo (tabla de sexo "sexo") :::::####
+sexo$sexo <- factor(
+sexo$sexo,
+levels = c(1,2),
+labels = c("Hombre","Mujer"))
+table(sexo$sexo)
+```
+#### Etiquetas de nivel máximo aprobado
+```{r}
+#::::: Tabla de nivel educativo "niv" :::::
+# Sirve para analizar los datos y conocer qué categorias están vacias
+table(nivel_edu$niv)
+
+####::::: Mediana de nivel educativo :::::####
+label_nivEdu <- c(
+"2" = "Primaria",
+"3" = "Secundaria",
+"4" = "Normal",
+"5" = "Técnica con secu.",
+"6" = "Preparatoria",
+"7" = "Técnica con prepa.",
+"8" = "Profesional",
+"9" = "Especialidad",
+"10" = "Maestría",
+"11" = "Doctorado",
+"99" = "No especificado")
+```
+#### Mediana de máximo grado aprobado
+```{r}
+label_nivEdu[as.character(median(nivel_edu$niv))]
+```
+#### Personas por nivel máximo de estudios aprobado
+```{r}
+####:::: Frecuencia de nivel educativo (tabla etiquetada de nivel educativo "niv") ::::####
+nivel_edu_txt <- nivel_edu
+nivel_edu_txt$niv <- factor(
+nivel_edu$niv,
+levels = c(2,3,4,5,6,7,8,9,10,11,99),
+labels = label_nivEdu)
+table(nivel_edu_txt$niv)
+```
+
+## Relación educación-sexo
+#### Hombres y mujeres por nivel máximo aprobado
+```{r}
+#::::: Tabla de nivel educativo "niv" por sexo "sexo" :::::
+table(sexo$sexo, nivel_edu_txt$niv)
+```
+#### Gráfica de niveles máximos de escolaridad
+```{r}
+####::::: Grafico de sexo y nivel educativo (histograma de nivel educativo "niv" por sexo "sexo") :::::####
+barplot(table(sexo$sexo, nivel_edu_txt$niv), las = 2, cex.names = 0.5, main = "Máximo grado aprobado por sexo", ylim = c(0, 700), ylab = "No. Hombres (rojo) y mujeres (verde)", col = c("red", "darkgreen"))
+```
+
+## Niveles de competencias lectoras
+#### Etiquetas de velocidad de lectura, comprensión de lo que se lee y concentración por varios minutos respectivamente
+```{r}
+#::::: Etiquetado de variables de competencia lectora :::::
+lectura_txt <- lectura
+
+label_velLec <- c("Lenta", "Regular", "Medianamente rápida", "Rápida")
+label_compLec <- c("Poca","Mitad","Mayor parte","Toda")
+label_consLec <- c("Difícil","Ni difícil, ni fácil","No difícil")
+
+lectura_txt$m_p32 <- factor(
+lectura$m_p32,
+levels = c(1,2,3,4),
+labels = label_velLec)
+lectura_txt$m_p33 <- factor(
+lectura$m_p33,
+levels = c(1,2,3,4),
+labels = label_compLec)
+lectura_txt$m_p36_2 <- factor(
+lectura$m_p36_2,
+levels = c(1,2,3),
+labels = label_consLec)
+```
+#### Frecuencia de velocidad de lectura
+```{r}
+####::::: Frecuencia de m_p32, m_p33, m_p36_2 :::::####
+table(lectura_txt$m_p32)
+```
+#### Frecuencia de comprensión de lo que se lee
+```{r}
+table(lectura_txt$m_p33)
+```
+#### Frecuencia de capacidad de concentración por varios minutos seguidos
+```{r}
+table(lectura_txt$m_p36_2)
+```
+#### Mediana de velocidad de lectura
+```{r}
+####::::: Mediana de m_p32, m_p33, m_p36_2 :::::####
+label_velLec[median(lectura$m_p32)]
+```
+#### Mediana de comprensión de lo que se lee
+```{r}
+label_compLec[median(lectura$m_p33)]
+```
+#### Mediana de concentración por varios minutos
+```{r}
+label_consLec[median(lectura$m_p36_2)]
+```
+
+# Relación entre nivel de educación y capacidad de lectura
+#### Correlación entre educación y velocidad de lectura
+```{r}
+####::::: Spearman entre m_p32, m_p33, m_p36_2 y niv :::::####
+cor(nivel_edu$niv, lectura$m_p32, method = "spearman")
+```
+#### Correlación entre educación y comprensión lectora
+```{r}
+cor(nivel_edu$niv, lectura$m_p33, method = "spearman")
+```
+#### Correlación entre educación y concentración continua en la lectura
+```{r}
+cor(nivel_edu$niv, lectura$m_p36_2, method = "spearman")
+```
