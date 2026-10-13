@@ -1,0 +1,348 @@
+---
+title: "Lars Etapa 2"
+author: "Lars Alexander Lotze Garza A01572651"
+date: "2026-10-12"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analisis descriptivos de los datos edad, m_p38a, m_p38b, m_p38c
+
+Se leyeron los datos de la base limpia y se agruparon en una data frame que solo contenga los datos analizados en este apartado.
+
+```{r}
+datos <- read.csv("MOLEC_2025_limpia.csv")
+var_rev <- datos[, c("edad", "m_p38a", "m_p38b", "m_p38c", "niv", "m_p36_2", "m_p33")]
+```
+
+## Analisis individual de la edad 
+
+Se hizo una data frame aparte para la edad, calcularon las medidas de tendencia central, los cuartiles y se grafico en una caja de bigotes y un histograma.
+
+```{r}
+edad <- var_rev[, 1]
+tab_frec_e <- table(edad)
+
+# Medidas descriptivas
+prom_e <- mean(edad)
+med_e <- median(edad)
+rang_e <- max(edad) - min(edad)
+moda_e <- names(tab_frec_e[tab_frec_e == max(tab_frec_e)])
+desv_e <- sd(edad)
+quantile(edad)
+
+# Graficas
+boxplot(edad, main = "Caja de bigotes para la edad", col = "blue")
+hist(edad, main = "Histograma de las edades", ylab = "frecuencia", col = "blue")
+```
+
+## Analisis individual de la pregunta m_p38a
+
+La pregunta m_p38a es: De niña(o), ¿sus padres o tutores le llevaban a bibliotecas o librerías? 
+donde 1 es si y 2 es no. 
+
+Se extrayeron los datos y se graficaron en un gráfico de barras, en este caso las medidas de tendencia central realmente no nos dicen mucho ya que solamente se trata de un si o un no. 
+
+```{r}
+m_p38a <- var_rev[, 2]
+p38a_factor <- factor(m_p38a, levels = c(1,2), labels = c("Si", "No"))
+tab_frec_38a <- table(p38a_factor)
+barplot(tab_frec_38a, main = "De niña(o), ¿sus padres o tutores le llevaban a bibliotecas o librerías? ", ylab = "frecuencia", xlab = "respuesta")
+```
+
+# Se calculo la probabilidad de decir que si y no:
+
+```{r}
+si_38a <- m_p38a[m_p38a == 1]
+prob_si_38a <- length(si_38a) / length(m_p38a)
+prob_no_38a <- 1 - prob_si_38a
+cat(" Probabilidad de decir que si: \n", prob_si_38a*100, "%\n", "Probabilidad de decir que no: \n", prob_no_38a*100, "%")
+```
+
+## Analisis individual de la pregunta m_p38b
+
+La pregunta m_p38b es: De niña(o), ¿veía a sus padres o tutores leer? 
+donde 1 es si y 2 es no. 
+
+Se extrayeron los datos y se graficaron en un gráfico de barras, en este caso las medidas de tendencia central realmente no nos dicen mucho ya que solamente se trata de un si o un no. 
+
+```{r}
+m_p38b <- var_rev[, 3]
+p38b_factor <- factor(m_p38b, levels = c(1,2), labels = c("Si", "No"))
+tab_frec_38b <- table(p38b_factor)
+barplot(tab_frec_38b, main = "De niña(o), ¿veía a sus padres o tutores leer? ", ylab = "frecuencia", xlab = "respuesta")
+```
+
+# Se calculo la probabilidad de decir que si y no:
+
+```{r}
+si_38b <- m_p38b[m_p38b == 1]
+prob_si_38b <- length(si_38b) / length(m_p38b)
+prob_no_38b <- 1 - prob_si_38b
+cat(" Probabilidad de decir que si: \n", prob_si_38b*100, "%\n", "Probabilidad de decir que no: \n", prob_no_38b*100, "%")
+```
+
+## Analisis individual de la pregunta m_p38c
+
+La pregunta m_p38c es: De niña(o), ¿sus padres o tutores le leían?  
+donde 1 es si y 2 es no. 
+
+Se extrayeron los datos y se graficaron en un gráfico de barras, en este caso las medidas de tendencia central realmente no nos dicen mucho ya que solamente se trata de un si o un no. 
+
+```{r}
+m_p38c <- var_rev[, 4]
+p38c_factor <- factor(m_p38c, levels = c(1,2), labels = c("Si", "No"))
+tab_frec_38c <- table(p38c_factor)
+barplot(tab_frec_38c, main = "De niña(o), ¿sus padres o tutores le leían? ", ylab = "frecuencia", xlab = "respuesta")
+```
+
+# Se calculo la probabilidad de decir que si y no:
+
+```{r}
+si_38c <- m_p38c[m_p38c == 1]
+prob_si_38c <- length(si_38c) / length(m_p38c)
+prob_no_38c <- 1 - prob_si_38c
+cat(" Probabilidad de decir que si: \n", prob_si_38c*100, "%\n", "Probabilidad de decir que no: \n", prob_no_38c*100, "%")
+```
+
+## Hallazgos generales del analisis descriptivo
+
+1. La media es una medida ideal para estudiar las edades ya que no difiere considerablemente de la mediana aunque hayan un par de datos atipicos. 
+2. La distribucion de la edad tiene un sesgo a la derecha notorio.
+3. El rango intercuartilico de las edades va de 23 a 49 años. 
+4. La probabilidad de que a alguien lo hayan llevado a una biblioteca en la infancia es de 42.01%. 
+5. La probabilidad de que alguien haya visto a sus padres o tutores leer en la infancia es de 68.95%.
+6. la probabilidad de que a alguien le leyeran sus padres en la infancia es de 60.52%.
+7. La pregunta 38 se puede estudiar a traves de una distribucion binomial. 
+
+## Cruces relevantes con las variables niv, m_p36_2, m_p33
+Estas variables corresponden a las preguntas y/o datos:
+- m_p33: Comprensión de su lectura
+- m_p36_2: Grado de acuerdo con: “Me resulta difícil leer por varios minutos seguidos”
+- niv: Último año o grado aprobado en la escuela (escolaridad)
+
+# Cruce entre habitos de la infancia y nivel de escolaridad alcanzado
+
+1. Para m_p38a:
+
+```{r}
+niv <- var_rev[, 5]
+label_nivEdu <- c(
+"2" = "Primaria",
+"3" = "Secundaria",
+"4" = "Normal",
+"5" = "Técnica con secu.",
+"6" = "Preparatoria",
+"7" = "Técnica con prepa.",
+"8" = "Profesional",
+"9" = "Especialidad",
+"10" = "Maestría",
+"11" = "Doctorado",
+"99" = "No especificado")
+niv_factor <- factor(niv,
+levels = c(2,3,4,5,6,7,8,9,10,11,99),
+labels = label_nivEdu)
+niv_38a_cruz <- table(p38a_factor, niv_factor)
+print(niv_38a_cruz)
+```
+
+Se calcularon algunas probabilidades relevantes:
+```{r}
+P_si_prof_38a <- niv_38a_cruz[1, 7] / sum(niv_38a_cruz[1, ])
+P_no_prof_38a <- niv_38a_cruz[2, 7] / sum(niv_38a_cruz[2, ])
+cat(" Probabilidad de graduarte de nivel profesional cuando tus papas si te llevan a bibliotecas en la infancia: \n", 
+    P_si_prof_38a*100, "%\n", 
+    "Probabilidad de graduarte de nivel profesional cuando tus papas no te llevan a bibliotecas en la infancia: \n", 
+    P_no_prof_38a*100, "%")
+```
+
+2. Para m_p38b:
+
+```{r}
+niv_38b_cruz <- table(p38b_factor, niv_factor)
+print(niv_38b_cruz)
+```
+
+Probabilidades relevantes:
+```{r}
+P_si_prof_38b <- niv_38b_cruz[1, 7] / sum(niv_38b_cruz[1, ])
+P_no_prof_38b <- niv_38b_cruz[2, 7] / sum(niv_38b_cruz[2, ])
+cat(" Probabilidad de graduarte de nivel profesional si ves a tus padres leer en la infancia: \n", 
+    P_si_prof_38b*100, "%\n", 
+    "Probabilidad de graduarte de nivel profesional si no ves a tus papas leer en la infancia: \n", 
+    P_no_prof_38b*100, "%")
+```
+
+3. Para m_p38c
+
+```{r}
+niv_38c_cruz <- table(p38c_factor, niv_factor)
+print(niv_38c_cruz)
+```
+
+Probabilidades relevantes:
+```{r}
+P_si_prof_38c <- niv_38c_cruz[1, 7] / sum(niv_38c_cruz[1, ])
+P_no_prof_38c <- niv_38c_cruz[2, 7] / sum(niv_38c_cruz[2, ])
+cat(" Probabilidad de graduarte de nivel profesional si sus padres le leian en la infancia: \n", 
+    P_si_prof_38c*100, "%\n", 
+    "Probabilidad de graduarte de nivel profesional si sus padres no le leian en la infancia: \n", 
+    P_no_prof_38c*100, "%")
+```
+
+# Cruce entre habitos de la infancia y comprension de lectura
+
+1. Para m_p38a
+
+```{r}
+p33 <- var_rev[, 7]
+p33_factor <- factor(p33, levels = c(1, 2, 3, 4), labels = c("poca", "la mitad", "la mayor parte", "toda"))
+p33_38a_cruz <- table(p38a_factor, p33_factor)
+print(p33_38a_cruz)
+```
+
+Probabilidades relevantes:
+```{r}
+P_si_lmp_38a <- (p33_38a_cruz[1, 3] + p33_38a_cruz[1, 4]) / sum(p33_38a_cruz[1, ])
+P_no_lmp_38a <- (p33_38a_cruz[2, 3] + p33_38a_cruz[2, 4]) / sum(p33_38a_cruz[2, ])
+P_si_poca_38a <- p33_38a_cruz[1, 1] / sum(p33_38a_cruz[1, ])
+P_no_poca_38a <- p33_38a_cruz[2, 1] / sum(p33_38a_cruz[2, ])
+
+cat(" Probabilidad de entender bien un texto si tus padres te llevaban a bibliotecas en la infancia: \n", 
+    P_si_lmp_38a*100, "%\n", 
+    "Probabilidad de entender bien un texto si tus padres no te llevaban a bibliotecas en la infancia: \n", 
+    P_no_lmp_38a*100, "%\n",
+    "Probabilidad de entender poco un texto si tus padres si te llevaban a bibliotecas en la infancia: \n", 
+    P_si_poca_38a*100, "%\n",
+    "Probabilidad de entender poco un texto si tus padres no te llevaban a bibliotecas en la infancia: \n", 
+    P_no_poca_38a*100, "%\n")
+```
+
+2. Para m_p38b
+
+```{r}
+p33_38b_cruz <- table(p38b_factor, p33_factor)
+print(p33_38b_cruz)
+```
+
+Probabilidades relevantes:
+```{r}
+P_si_lmp_38b <- (p33_38b_cruz[1, 3] + p33_38b_cruz[1, 4]) / sum(p33_38b_cruz[1, ])
+P_no_lmp_38b <- (p33_38b_cruz[2, 3] + p33_38b_cruz[2, 4]) / sum(p33_38b_cruz[2, ])
+P_si_poca_38b <- p33_38b_cruz[1, 1] / sum(p33_38b_cruz[1, ])
+P_no_poca_38b <- p33_38b_cruz[2, 1] / sum(p33_38b_cruz[2, ])
+
+cat(" Probabilidad de entender bien un texto si veia a sus padres leer: \n", 
+    P_si_lmp_38b*100, "%\n", 
+    "Probabilidad de entender bien un texto si no veia a sus padres leer: \n", 
+    P_no_lmp_38b*100, "%\n",
+    "Probabilidad de entender poco un texto si veia a sus padres leer: \n", 
+    P_si_poca_38b*100, "%\n",
+    "Probabilidad de entender poco un texto si no veia a sus padres leer: \n", 
+    P_no_poca_38b*100, "%\n")
+```
+
+3. Para m_p38c
+
+```{r}
+p33_38c_cruz <- table(p38c_factor, p33_factor)
+print(p33_38c_cruz)
+```
+
+Probabilidades relevantes:
+```{r}
+P_si_lmp_38c <- (p33_38c_cruz[1, 3] + p33_38c_cruz[1, 4]) / sum(p33_38c_cruz[1, ])
+P_no_lmp_38c <- (p33_38c_cruz[2, 3] + p33_38c_cruz[2, 4]) / sum(p33_38c_cruz[2, ])
+P_si_poca_38c <- p33_38c_cruz[1, 1] / sum(p33_38c_cruz[1, ])
+P_no_poca_38c <- p33_38c_cruz[2, 1] / sum(p33_38c_cruz[2, ])
+
+cat(" Probabilidad de entender bien un texto si le leian en la infancia: \n", 
+    P_si_lmp_38c*100, "%\n", 
+    "Probabilidad de entender bien un texto si no le leian en la infancia: \n", 
+    P_no_lmp_38c*100, "%\n",
+    "Probabilidad de entender poco un texto si le leian en la infancia: \n", 
+    P_si_poca_38c*100, "%\n",
+    "Probabilidad de entender poco un texto si no le leian en la infancia: \n", 
+    P_no_poca_38c*100, "%\n")
+```
+
+# Cruce entre habitos de la infancia y retencion de atencion
+
+1. Para m_p38a
+
+```{r}
+p36_2 <- var_rev[, 6]
+p36_2_factor <- factor(p36_2, levels = c(1, 2, 3), labels = c("De acuerdo", "Ni de acuerdo ni en desacuerdo", "En desacuerdo"))
+p36_38a_cruz <- table(p38a_factor, p36_2_factor)
+print(p36_38a_cruz)
+```
+
+Probabilidades relevantes:
+```{r}
+P_si_Ed_38a <- p36_38a_cruz[1, 3] / sum(p36_38a_cruz[1, ])
+P_no_Ed_38a <- p36_38a_cruz[2, 3] / sum(p36_38a_cruz[2, ])
+P_si_Da_38a <- p36_38a_cruz[1, 1] / sum(p36_38a_cruz[1, ])
+P_no_Da_38a <- p36_38a_cruz[2, 1] / sum(p36_38a_cruz[2, ])
+
+cat(" Probabilidad de tener buena capacidad de atencion si le llevaban a bibliotecas: \n", 
+    P_si_Ed_38a*100, "%\n", 
+    "Probabilidad de tener buena capacidad de atencion si no le llevaban a bibliotecas: \n", 
+    P_no_Ed_38a*100, "%\n",
+    "Probabilidad de tener mala capacidad de atencion si le llevaban a bibliotecas: \n", 
+    P_si_Da_38a*100, "%\n",
+    "Probabilidad de tener mala capacidad de atencion si no le llevaban a bibliotecas: \n", 
+    P_no_Da_38a*100, "%\n")
+```
+
+2. Para m_p38b
+
+```{r}
+p36_38b_cruz <- table(p38b_factor, p36_2_factor)
+print(p36_38b_cruz)
+```
+
+Probabilidades relevantes:
+```{r}
+P_si_Ed_38b <- p36_38b_cruz[1, 3] / sum(p36_38b_cruz[1, ])
+P_no_Ed_38b <- p36_38b_cruz[2, 3] / sum(p36_38b_cruz[2, ])
+P_si_Da_38b <- p36_38b_cruz[1, 1] / sum(p36_38b_cruz[1, ])
+P_no_Da_38b <- p36_38b_cruz[2, 1] / sum(p36_38b_cruz[2, ])
+
+cat(" Probabilidad de tener buena capacidad de atencion si veia a sus padres leer: \n", 
+    P_si_Ed_38b*100, "%\n", 
+    "Probabilidad de tener buena capacidad de atencion si no veia a sus padres leer: \n", 
+    P_no_Ed_38b*100, "%\n",
+    "Probabilidad de tener mala capacidad de atencion si veia a sus padres leer: \n", 
+    P_si_Da_38b*100, "%\n",
+    "Probabilidad de tener mala capacidad de atencion si no veia a sus padres leer: \n", 
+    P_no_Da_38b*100, "%\n")
+```
+
+3. Para m_p38c
+
+```{r}
+p36_38c_cruz <- table(p38c_factor, p36_2_factor)
+print(p36_38c_cruz)
+```
+
+Probabilidades relevantes:
+```{r}
+P_si_Ed_38c <- p36_38c_cruz[1, 3] / sum(p36_38c_cruz[1, ])
+P_no_Ed_38c <- p36_38c_cruz[2, 3] / sum(p36_38c_cruz[2, ])
+P_si_Da_38c <- p36_38c_cruz[1, 1] / sum(p36_38c_cruz[1, ])
+P_no_Da_38c <- p36_38c_cruz[2, 1] / sum(p36_38c_cruz[2, ])
+
+cat(" Probabilidad de tener buena capacidad de atencion si sus padres le leian en la infancia: \n", 
+    P_si_Ed_38c*100, "%\n", 
+    "Probabilidad de tener buena capacidad de atencion si sus padres no le leian en la infancia: \n", 
+    P_no_Ed_38c*100, "%\n",
+    "Probabilidad de tener mala capacidad de atencion si sus padres le leian en la infancia: \n", 
+    P_si_Da_38c*100, "%\n",
+    "Probabilidad de tener mala capacidad de atencion si sus padres no le leian en la infancia: \n", 
+    P_no_Da_38c*100, "%\n")
+```

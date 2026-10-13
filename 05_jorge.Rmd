@@ -1,0 +1,53 @@
+---
+title: "05_jorge"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r carga_datos}
+datos = read.csv("MOLEC_2025_limpia.csv")
+vars = c("m_p34_1", "m_p34_2", "m_p35")
+```
+
+```{r, echo=FALSE}
+cat("Se analizan las siguientes variables: m_p34_1, m_p34_2, m_p35\n",
+    
+  "Ambas se responden Booleano Si/No\n son variables Nominales",
+  "m_p34_1 - acustumbra consultar medios impresos como diccionarios o enciclopedias?\n",
+  "m_p34_2 - acostumbra consultar medios digitales como diccionarios virtuales, paginas de internet (Google, Wikipedia) o inteligencia artificial?\n",
+    
+  "Se responde 1 = lee mas, 2 = lee igual, 3 = lee meno\n")
+  
+```
+
+```{r, echo=TRUE}
+frec <- table(datos$m_p34_1)
+names(frec) <- c("Si", "No")
+pie(frec,
+    labels = paste0(names(frec), " (", round(100 * prop.table(frec), 1), "%)"),
+    main = "Datos Nominales",
+    sub = "Acostumbra consultar medios impresos como diccionarios o enciclopedias")
+```
+
+```{r, echo=TRUE}
+frec2 <- table(datos$m_p34_2)
+names(frec2) <- c("Si", "No")
+pie(frec2,
+    labels = paste0(names(frec2), " (", round(100 * prop.table(frec2), 1), "%)"),
+    main = "Datos Nominales",
+    sub = "Acostumbra consultar medios digitales (internet, diccionarios virtuales, IA)")
+```
+
+```{r, echo=TRUE}
+frec3 <- table(datos$m_p35)
+names(frec3) <- c("Lee mas", "Lee igual", "Lee menos")
+pct3 <- round(100 * prop.table(frec3), 1)
+bp <- barplot(pct3,
+              main = "Datos Ordinales",
+              sub = "Con respecto a un año atras, considera que usted...",
+              ylab = "Porcentaje",
+              ylim = c(0, max(pct3) + 10))
+text(bp, pct3, labels = paste0(pct3, "%"), pos = 3)
+```
+

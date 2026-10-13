@@ -1,0 +1,230 @@
+---
+title: "Etapa 2: Analisis descriptivo. Habitos de lectura en la infancia (MOLEC 2025)"
+author: "Equipo 1 (jorge, efrain, ian, oscar, lars)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+lang: es
+geometry: margin=2cm
+header-includes:
+  - \usepackage{float}
+---
+
+```{r setup_main, include=FALSE}
+# en el reporte no se muestra codigo, solo tablas y graficas
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      fig.pos = "H", fig.align = "center")
+```
+
+```{r datos_main}
+datos <- read.csv("MOLEC_2025_limpia.csv")
+n <- nrow(datos)
+
+# porcentaje que contesto 1 en una variable
+pct1 <- function(x) {
+  round(mean(x == 1) * 100, 1)
+}
+
+estimulos <- c("m_p38a", "m_p38b", "m_p38c", "m_p39_1", "m_p39_4")
+nombres_est <- c("Lo llevaban a bibliotecas", "Veia leer a sus padres", "Sus padres le leian",
+                 "Maestros pedian otros libros", "Maestros animaban a ir a bibliotecas")
+
+# resultados en forma de si/no para comparar porcentajes
+comp_alta <- datos$m_p33 >= 3              # comprende la mayor parte o toda
+lic <- datos$niv >= 8 & datos$niv != 99    # licenciatura o mas
+no_dificil <- datos$m_p36_2 == 3           # no le cuesta leer varios minutos
+
+# porcentaje de cada resultado entre quien si tuvo el estimulo y quien no
+comp_si <- c(); comp_no <- c(); lic_si <- c(); lic_no <- c(); at_si <- c(); at_no <- c()
+for (v in estimulos) {
+  x <- datos[[v]]
+  comp_si <- c(comp_si, round(mean(comp_alta[x == 1]) * 100, 1))
+  comp_no <- c(comp_no, round(mean(comp_alta[x == 2]) * 100, 1))
+  lic_si <- c(lic_si, round(mean(lic[x == 1]) * 100, 1))
+  lic_no <- c(lic_no, round(mean(lic[x == 2]) * 100, 1))
+  at_si <- c(at_si, round(mean(no_dificil[x == 1]) * 100, 1))
+  at_no <- c(at_no, round(mean(no_dificil[x == 2]) * 100, 1))
+}
+
+# Spearman: estimulo (1 = si, 0 = no) contra cada resultado, sin los codigos 9 y 99
+rho_niv <- c(); p_niv <- c(); rho_33 <- c(); p_33 <- c(); rho_36 <- c(); p_36 <- c()
+for (v in estimulos) {
+  x <- datos[[v]]
+  usar <- x != 9 & datos$niv != 99
+  tuvo <- ifelse(x[usar] == 1, 1, 0)
+  a <- cor.test(tuvo, datos$niv[usar], method = "spearman", exact = FALSE)
+  b <- cor.test(tuvo, datos$m_p33[usar], method = "spearman", exact = FALSE)
+  d <- cor.test(tuvo, datos$m_p36_2[usar], method = "spearman", exact = FALSE)
+  rho_niv <- c(rho_niv, round(a$estimate, 2)); p_niv <- c(p_niv, a$p.value)
+  rho_33 <- c(rho_33, round(b$estimate, 2)); p_33 <- c(p_33, b$p.value)
+  rho_36 <- c(rho_36, round(d$estimate, 2)); p_36 <- c(p_36, d$p.value)
+}
+
+# escolaridad contra competencias lectoras
+sin99 <- datos$niv != 99
+rho_niv_p32 <- round(cor(datos$niv[sin99], datos$m_p32[sin99], method = "spearman"), 2)
+rho_niv_p33 <- round(cor(datos$niv[sin99], datos$m_p33[sin99], method = "spearman"), 2)
+rho_niv_p36 <- round(cor(datos$niv[sin99], datos$m_p36_2[sin99], method = "spearman"), 2)
+
+# personas que se quitaron en la limpieza solo por no tener m_p38d_1
+equipo <- read.csv("DatosEquipo1_2025.csv")
+otras <- names(equipo)[names(equipo) != "m_p38d_1"]
+quitadas <- sum(complete.cases(equipo[otras])) - n
+```
+
+# 1. Objetivo 
+
+El objetivo es explorar, con los datos del Modulo sobre Lectura (MOLEC) 2025 del INEGI **¿como impacta la falta de habitos de lectura desde la infancia sobre el nivel de escolaridad alcanzado, la comprension lectora y la retencion de atencion?** y para eso comparamos a las personas que si tuvieron estimulos de lectura de niños contra las que no los tuvieron, y de ahi sacaremos las hipotesis para el analisis inferencial.
+
+# 2. Variables
+
+Trabajamos con `r n` personas de 12 años o mas que leen y que contestaron todas las preguntas El Cuadro 1 resume las variables. Las tres de resultado son la escolaridad (`niv`), la comprension (`m_p33`) y la atencion (`m_p36_2`); las demas son los estimulos de la infancia y variables para describir a la muestra.
+
+```{r tabla_variables}
+libros <- datos$m_p38d_1[datos$m_p38d_1 != 9]
+
+tabla1 <- data.frame(
+  Variable = c("m_p38a", "m_p38b", "m_p38c", "m_p38d", "m_p38d_1", "m_p39_1", "m_p39_4",
+               "niv", "m_p33", "m_p36_2", "m_p32", "m_p34_1", "m_p34_2", "m_p35", "sexo", "edad"),
+  Pregunta = c("De niño, lo llevaban a bibliotecas o librerias",
+               "De niño, veia leer a sus padres o tutores",
+               "De niño, sus padres o tutores le leian",
+               "Habia libros en su casa (sin contar los de texto)",
+               "Cuantos libros habia en su casa",
+               "En primaria, le pedian leer otros libros",
+               "En primaria, lo animaban a visitar bibliotecas",
+               "Nivel maximo de escolaridad",
+               "Comprension de lo que lee",
+               "Le resulta dificil leer varios minutos seguidos",
+               "Velocidad de lectura",
+               "Consulta medios impresos de apoyo",
+               "Consulta medios digitales de apoyo",
+               "Lee mas, igual o menos que hace un año",
+               "Sexo", "Edad"),
+  Tipo = c("Nominal", "Nominal", "Nominal", "Nominal", "Ordinal", "Nominal", "Nominal",
+           "Ordinal", "Ordinal", "Ordinal", "Ordinal", "Nominal", "Nominal", "Ordinal",
+           "Nominal", "Numerica"),
+  Resumen = c(paste0("Si: ", pct1(datos$m_p38a), "%"),
+              paste0("Si: ", pct1(datos$m_p38b), "%"),
+              paste0("Si: ", pct1(datos$m_p38c), "%"),
+              paste0("Si: ", pct1(datos$m_p38d), "%"),
+              paste0("De 1 a 25 libros: ", pct1(libros), "%"),
+              paste0("Si: ", pct1(datos$m_p39_1), "%"),
+              paste0("Si: ", pct1(datos$m_p39_4), "%"),
+              "Mediana: preparatoria",
+              paste0("Mediana: la mayor parte. Poca o la mitad: ", round(mean(!comp_alta) * 100, 1), "%"),
+              paste0("De acuerdo: ", pct1(datos$m_p36_2), "%"),
+              "Mediana: regular",
+              paste0("Si: ", pct1(datos$m_p34_1), "%"),
+              paste0("Si: ", pct1(datos$m_p34_2), "%"),
+              paste0("Mas: ", pct1(datos$m_p35), "%. Menos: ", round(mean(datos$m_p35 == 3) * 100, 1), "%"),
+              paste0("Mujeres: ", round(mean(datos$sexo == 2) * 100, 1), "%"),
+              paste0("Media: ", round(mean(datos$edad), 1), " años. Desv. est.: ", round(sd(datos$edad), 1)))
+)
+knitr::kable(tabla1, caption = "Variables del analisis y su caracteristica principal.")
+```
+
+La muestra se puede considerar joven (la mitad tiene `r median(datos$edad)` años o menos) y la edad tiene sesgo a la derecha. En casa, el estimulo mas comun es haber visto leer a sus padres y el menos comun que lo llevaran a bibliotecas. La mayoria dice comprender la mayor parte o todo lo que lee, y solo el `r pct1(datos$m_p36_2)`% reconoce que le cuesta leer varios minutos seguidos.
+
+# 3. Resultados
+
+La Figura 1 compara, para cada estimulo, a quienes si lo tuvieron (azul) contra quienes no (rojo) el estimulo.
+
+```{r figura1, fig.height=3.3, fig.width=7.5, fig.cap="Porcentaje con comprension alta (izquierda) y con licenciatura o mas (derecha), segun si tuvo o no cada estimulo de lectura en la infancia."}
+par(mfrow = c(1, 2), mar = c(4, 4, 2, 1))
+cortos <- c("38a", "38b", "38c", "39_1", "39_4")
+barplot(rbind(comp_si, comp_no), beside = TRUE, names.arg = cortos, ylim = c(0, 100),
+        col = c("steelblue", "tomato"), ylab = "% comprende la mayor parte o toda",
+        xlab = "Estimulo", cex.names = 0.8, cex.lab = 0.8,
+        legend.text = c("Si lo tuvo", "No lo tuvo"),
+        args.legend = list(x = "top", horiz = TRUE, bty = "n", cex = 0.8))
+barplot(rbind(lic_si, lic_no), beside = TRUE, names.arg = cortos, ylim = c(0, 100),
+        col = c("steelblue", "tomato"), ylab = "% con licenciatura o mas",
+        xlab = "Estimulo", cex.names = 0.8, cex.lab = 0.8)
+par(mfrow = c(1, 1))
+```
+
+En comprension la barra azul es mas alta que la roja en los cinco estimulos, es decir, quien tuvo el estimulo comprende mejor. En escolaridad pasa lo mismo con los estimulos en casa, pero no con los de la primaria: en 39_4 incluso sale un poco mas alta la roja. La diferencia mas clara es en que lo llevaran a bibliotecas o librerias (38a): comprende la mayor parte o todo el `r comp_si[1]`% de quienes si eran llevados contra el `r comp_no[1]`% de quienes no, y tiene licenciatura o mas el `r lic_si[1]`% contra el `r lic_no[1]`%. En cambio, en que le leyeran sus padres (38c) las barras casi no se distinguen.
+
+El Cuadro 2 resume lo mismo con la correlacion de Spearman. Cada estimulo se codifico como 1 = si y 0 = no, asi que un valor positivo significa que quien tuvo el estimulo sale mejor.
+
+```{r tabla_spearman}
+# un asterisco cuando el valor p es menor a 0.05
+marca <- function(rho, p) {
+  paste0(format(rho, nsmall = 2), ifelse(p < 0.05, " *", ""))
+}
+tabla2 <- data.frame(
+  Estimulo = nombres_est,
+  Si = paste0(c(pct1(datos$m_p38a), pct1(datos$m_p38b), pct1(datos$m_p38c),
+                pct1(datos$m_p39_1), pct1(datos$m_p39_4)), "%"),
+  Escolaridad = marca(rho_niv, p_niv),
+  Comprension = marca(rho_33, p_33),
+  Atencion = marca(rho_36, p_36)
+)
+names(tabla2) <- c("Estimulo en la infancia", "Si lo tuvo", "Escolaridad", "Comprension", "Atencion")
+knitr::kable(tabla2, align = "lrrrr",
+             caption = "Correlacion de Spearman entre cada estimulo y los tres resultados. El asterisco indica valor p menor a 0.05.")
+```
+
+Que lo llevaran a bibliotecas es el unico estimulo en casa relacionado con los tres resultados. Ver leer a sus padres solo se relaciona con la escolaridad, y que le leyeran con ninguno. Los dos estimulos de la primaria se relacionan con la comprension y la atencion. Aun asi todas las correlaciones son debiles (la mayor es `r max(rho_niv)`): los estimulos van en la direccion esperada pero explican poco. La escolaridad se relaciona mas con las competencias lectoras (Spearman de `r rho_niv_p33` con la comprension, `r rho_niv_p32` con la velocidad y `r rho_niv_p36` con la atencion). Ademas, entre quienes tenian libros en casa, en general a mas libros mayor escolaridad y mejor comprension (Anexo, Cuadro 3).
+
+**Hipotesis para el analisis inferencial.**
+
+1. Se puede inferer que la proporcion de personas con comprension alta es mayor entre quienes eran llevados a bibliotecas o librerias de niños que entre quienes no.
+2. El nivel de escolaridad es mayor en quienes eran llevados a bibliotecas o librerias.
+3. Los estimulos de los maestros en la primaria estan asociados con la comprension y con la facilidad para leer varios minutos seguidos.
+4. A mayor numero de libros en casa durante la infancia, mayor escolaridad.
+
+**Que logramos.** Describimos las variables del equipo y cruzamos los estimulos de la infancia con la escolaridad, la comprension y la atencion.
+
+**Documentos de trabajo (Rmd):** <https://github.com/JHUMBERTTO/MOLEC_Inference_Research>
+
+\newpage
+
+# Anexos
+
+```{r anexo_edad, fig.height=2.6, fig.width=7.5, fig.cap="Histograma y diagrama de caja de la edad."}
+par(mfrow = c(1, 2), mar = c(4, 4, 1, 1))
+hist(datos$edad, main = "", xlab = "Edad", ylab = "Frecuencia", col = "steelblue")
+boxplot(datos$edad, horizontal = TRUE, xlab = "Edad", col = "steelblue")
+par(mfrow = c(1, 1))
+```
+
+```{r anexo_niv, fig.height=3.2, fig.width=7.5, fig.cap="Nivel maximo de escolaridad por sexo."}
+niveles <- c("Primaria", "Secundaria", "Normal", "Tec. con sec.", "Preparatoria", "Tec. con prepa.",
+             "Licenciatura", "Especialidad", "Maestria", "Doctorado")
+niv_f <- factor(datos$niv[sin99], levels = 2:11, labels = niveles)
+sexo_f <- factor(datos$sexo[sin99], levels = c(1, 2), labels = c("Hombre", "Mujer"))
+par(mar = c(6, 4, 1, 1))
+barplot(table(sexo_f, niv_f), beside = TRUE, las = 2, cex.names = 0.7, ylab = "Personas",
+        col = c("steelblue", "tomato"), legend.text = TRUE,
+        args.legend = list(x = "topright", bty = "n", cex = 0.8))
+```
+
+```{r anexo_apoyo, fig.height=2.8, fig.width=7.5, fig.cap="Consulta de materiales de apoyo (impresos y digitales) y cambio en la lectura respecto a un año atras."}
+par(mfrow = c(1, 2), mar = c(4, 4, 1, 1))
+apoyo <- rbind(c(pct1(datos$m_p34_1), pct1(datos$m_p34_2)),
+               c(100 - pct1(datos$m_p34_1), 100 - pct1(datos$m_p34_2)))
+barplot(apoyo, beside = TRUE, names.arg = c("Impresos", "Digitales"), ylim = c(0, 100),
+        col = c("steelblue", "tomato"), ylab = "Porcentaje", cex.names = 0.8,
+        legend.text = c("Si", "No"), args.legend = list(x = "top", horiz = TRUE, bty = "n", cex = 0.8))
+cambio <- round(prop.table(table(datos$m_p35)) * 100, 1)
+barplot(cambio, names.arg = c("Lee mas", "Lee igual", "Lee menos"), ylim = c(0, 100),
+        col = "steelblue", ylab = "Porcentaje", cex.names = 0.8)
+par(mfrow = c(1, 1))
+```
+
+```{r anexo_libros}
+grupos <- c("De 1 a 25", "De 26 a 50", "De 51 a 75", "De 76 a 100", "Mas de 100")
+personas <- c(); pct_lic <- c(); pct_comp <- c()
+for (k in 1:5) {
+  g <- datos$m_p38d_1 == k
+  personas <- c(personas, sum(g))
+  pct_lic <- c(pct_lic, round(mean(lic[g]) * 100, 1))
+  pct_comp <- c(pct_comp, round(mean(comp_alta[g]) * 100, 1))
+}
+tablaA1 <- data.frame(grupos, personas, pct_lic, pct_comp)
+names(tablaA1) <- c("Libros en casa", "Personas", "% licenciatura o mas", "% comprension alta")
+knitr::kable(tablaA1, caption = "Escolaridad y comprension segun el numero de libros que habia en casa durante la infancia.")
+```

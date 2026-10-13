@@ -13,11 +13,8 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 ```{r}
-installed.packages("readr")
-installed.packages("fdth")
-library(fdth)
 library(readr)
-MOLEC <- read_csv("C:/Users/ianuc/Downloads/MOLEC_2025_limpia.csv")
+MOLEC <- read_csv("MOLEC_2025_limpia.csv")
 
 #::::: Columnas/categorias relevantes :::::
 sexo <- MOLEC[, c("sexo")]
