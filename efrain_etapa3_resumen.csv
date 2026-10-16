@@ -1,0 +1,6 @@
+"Contraste","Variable","Comparacion","n1","Var1","n2","Var2","F_calc","gl1","gl2","F_crit_inf","F_crit_sup","p_valor","IC_95","Decision"
+"Prueba 1","Nivel de Escolaridad (niv)","Maestros pedían otros libros (Sí) vs Maestros no pedían (No)",1374,5.4158,583,6.2641,0.8646,1373,582,0.8735,1.1493,"0.03494","[0.7523, 0.9898]","Rechazar H0"
+"Prueba 2","Nivel de Escolaridad (niv)","Maestros animaban bibl. (Sí) vs Maestros no animaban (No)",1394,5.4304,578,6.2044,0.8752,1393,577,0.8734,1.1495,"0.05369","[0.7614, 1.0021]","No rechazar H0"
+"Prueba 3","Nivel de Escolaridad (niv)","Capaz de concentrarse (No difícil, 3) vs Dificultad para concentrarse (1 o 2)",1689,5.5509,325,5.6871,0.9761,1688,324,0.8492,1.1891,"0.7621","[0.8208, 1.1494]","No rechazar H0"
+"Prueba 4","Velocidad de Lectura (m_p32)","Veía a sus padres leer (Sí) vs No veía a sus padres leer (No)",1390,0.7685,626,0.7455,1.0308,1389,625,0.8764,1.1449,"0.6633","[0.9003, 1.1761]","No rechazar H0"
+"Prueba 5","Velocidad de Lectura (m_p32)","Padres le leían de niño (Sí) vs Padres no le leían (No)",1220,0.7464,796,0.7797,0.9573,1219,795,0.882,1.1357,"0.4953","[0.8429, 1.0854]","No rechazar H0"

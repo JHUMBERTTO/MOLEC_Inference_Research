@@ -1,0 +1,196 @@
+---
+title: "Etapa 3: Comparación de Varianzas entre Dos Muestras"
+author: "Efraín Muro"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+lang: es
+geometry: margin=2cm
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## 1. Carga y preparación de los datos
+
+Cargamos los datos y limpiamos los códigos especiales:
+* En `niv` se excluye el código 99 ("No especificado") para no alterar la varianza.
+* En `m_p39_1` y `m_p39_4` los códigos 9 ("No recuerda") se convierten a `NA`.
+* Para `m_p36_2` definimos dos grupos: Capaz de concentrarse (valor 3 = "No difícil") frente a quienes tienen dificultad (valores 1 y 2).
+
+```{r datos}
+datos <- read.csv("MOLEC_2025_limpia.csv")
+
+# Filtrar escolaridad sin 99
+datos_niv <- datos[datos$niv != 99, ]
+
+# Reemplazar 9 por NA en estímulos escolares
+datos_niv$m_p39_1[datos_niv$m_p39_1 == 9] <- NA
+datos_niv$m_p39_4[datos_niv$m_p39_4 == 9] <- NA
+
+# Variable dicotómica de concentración (3: Sí capaz, 1 o 2: Con dificultad)
+datos_niv$capaz_36 <- ifelse(datos_niv$m_p36_2 == 3, "Capaz", "Dificultad")
+```
+
+En todos los casos se realiza una prueba $F$ bilateral con un nivel de significancia $\alpha = 0.05$:
+$$H_0: \sigma_1^2 = \sigma_2^2 \quad \text{vs.} \quad H_1: \sigma_1^2 \neq \sigma_2^2$$
+
+---
+
+## 2. Varianza de Máximo Grado Aprobado (`niv`)
+
+### 2.1 Según si sus maestros les pedían leer otros libros (`m_p39_1`)
+
+Comparamos a quienes sus maestros sí les pedían otros libros ($G_1$: Sí, valor 1) contra quienes no ($G_2$: No, valor 2).
+
+```{r test_39_1}
+g1_pedian <- datos_niv$niv[datos_niv$m_p39_1 == 1]
+g2_nopedian <- datos_niv$niv[datos_niv$m_p39_1 == 2]
+
+var.test(g1_pedian, g2_nopedian, alternative = "two.sided", conf.level = 0.95)
+```
+
+**Decisión:** Como $p = 0.0349 < 0.05$, **se rechaza $H_0$**.  
+**Conclusión:** La varianza de escolaridad es significativamente menor en quienes recibieron la exigencia de leer otros libros ($s_1^2 = 5.42$) que en quienes no ($s_2^2 = 6.26$). Este estímulo homogeniza el logro escolar hacia niveles más altos.
+
+---
+
+### 2.2 Según si sus maestros les animaban a visitar bibliotecas (`m_p39_4`)
+
+Comparamos a quienes sí los motivaban ($G_1$: Sí, valor 1) contra quienes no ($G_2$: No, valor 2).
+
+```{r test_39_4}
+g1_bibl <- datos_niv$niv[datos_niv$m_p39_4 == 1]
+g2_nobibl <- datos_niv$niv[datos_niv$m_p39_4 == 2]
+
+var.test(g1_bibl, g2_nobibl, alternative = "two.sided", conf.level = 0.95)
+```
+
+**Decisión:** Como $p = 0.0537 > 0.05$, **no se rechaza $H_0$** al 5% de significancia.  
+**Conclusión:** No existe evidencia suficiente al 5% de diferencia de varianzas, aunque existe una tendencia similar a menor dispersión en el grupo estimulado ($s_1^2 = 5.43$ vs $s_2^2 = 6.20$).
+
+---
+
+### 2.3 Según si se es capaz de concentrarse en la lectura por varios minutos (`m_p36_2`)
+
+Comparamos a quienes no les cuesta concentrarse ($G_1$: Capaz, valor 3) frente a quienes tienen dificultad o neutralidad ($G_2$: Dificultad, valores 1 y 2).
+
+```{r test_36_2}
+g1_capaz <- datos_niv$niv[datos_niv$capaz_36 == "Capaz"]
+g2_dificil <- datos_niv$niv[datos_niv$capaz_36 == "Dificultad"]
+
+var.test(g1_capaz, g2_dificil, alternative = "two.sided", conf.level = 0.95)
+```
+
+**Decisión:** Como $p = 0.7621 > 0.05$, **no se rechaza $H_0$**.  
+**Conclusión:** Las varianzas de escolaridad son prácticamente idénticas ($5.55$ vs $5.69$). La capacidad de concentración no altera la dispersión en los niveles educativos alcanzados.
+
+---
+
+## 3. Varianza de Velocidad de Lectura (`m_p32`)
+
+### 3.1 Según si veía a sus padres leer (`m_p38b`)
+
+Comparamos a quienes sí veían leer a sus padres ($G_1$: Sí, valor 1) contra quienes no ($G_2$: No, valor 2).
+
+```{r test_38b}
+g1_veia <- datos$m_p32[datos$m_p38b == 1]
+g2_noveia <- datos$m_p32[datos$m_p38b == 2]
+
+var.test(g1_veia, g2_noveia, alternative = "two.sided", conf.level = 0.95)
+```
+
+**Decisión:** Como $p = 0.6633 > 0.05$, **no se rechaza $H_0$**.  
+**Conclusión:** No hay diferencia en la varianza de la velocidad de lectura entre ambos grupos ($s_1^2 = 0.768$ vs $s_2^2 = 0.746$).
+
+---
+
+### 3.2 Según si sus padres o tutores les leían (`m_p38c`)
+
+Comparamos a quienes sus padres les leían de niños ($G_1$: Sí, valor 1) contra quienes no ($G_2$: No, valor 2).
+
+```{r test_38c}
+g1_leian <- datos$m_p32[datos$m_p38c == 1]
+g2_noleian <- datos$m_p32[datos$m_p38c == 2]
+
+var.test(g1_leian, g2_noleian, alternative = "two.sided", conf.level = 0.95)
+```
+
+**Decisión:** Como $p = 0.4953 > 0.05$, **no se rechaza $H_0$**.  
+**Conclusión:** No hay evidencia de diferencia de variabilidad en la velocidad de lectura según si sus padres les leían ($s_1^2 = 0.746$ vs $s_2^2 = 0.780$).
+
+---
+
+## 4. Tabla resumen de resultados
+
+```{r tabla_resumen, echo=FALSE}
+resumen <- data.frame(
+  Variable = c("niv", "niv", "niv", "m_p32", "m_p32"),
+  Comparacion = c(
+    "Pedían otros libros (m_p39_1)",
+    "Animaban a bibliotecas (m_p39_4)",
+    "Capacidad concentración (m_p36_2)",
+    "Veía leer a padres (m_p38b)",
+    "Padres le leían (m_p38c)"
+  ),
+  n1 = c(length(na.omit(g1_pedian)), length(na.omit(g1_bibl)), length(na.omit(g1_capaz)), length(na.omit(g1_veia)), length(na.omit(g1_leian))),
+  Var1 = c(round(var(g1_pedian, na.rm=T), 3), round(var(g1_bibl, na.rm=T), 3), round(var(g1_capaz, na.rm=T), 3), round(var(g1_veia, na.rm=T), 3), round(var(g1_leian, na.rm=T), 3)),
+  n2 = c(length(na.omit(g2_nopedian)), length(na.omit(g2_nobibl)), length(na.omit(g2_dificil)), length(na.omit(g2_noveia)), length(na.omit(g2_noleian))),
+  Var2 = c(round(var(g2_nopedian, na.rm=T), 3), round(var(g2_nobibl, na.rm=T), 3), round(var(g2_dificil, na.rm=T), 3), round(var(g2_noveia, na.rm=T), 3), round(var(g2_noleian, na.rm=T), 3)),
+  F_calc = c(0.8646, 0.8752, 0.9761, 1.0308, 0.9573),
+  p_valor = c("0.0349", "0.0537", "0.7621", "0.6633", "0.4953"),
+  Decision = c("Rechazar H0 (*)", "No rechazar H0", "No rechazar H0", "No rechazar H0", "No rechazar H0")
+)
+knitr::kable(resumen, caption = "Resumen de pruebas F de comparación de varianzas (alpha = 0.05). (*) Indica significancia.")
+```
+
+---
+
+## 5. Gráficos comparativos
+
+```{r graficos, fig.width=9, fig.height=5.5}
+par(mfrow = c(2, 3), mar = c(3.8, 3.8, 2.5, 1))
+
+# 1. niv vs 39_1
+boxplot(niv ~ m_p39_1, data = datos_niv, names = c("Sí", "No"),
+        col = c("steelblue", "coral"), main = "niv vs 39_1", ylab = "Escolaridad (niv)")
+mtext(paste("s² Sí=5.42 | No=6.26"), side = 1, line = 2, cex = 0.75)
+
+# 2. niv vs 39_4
+boxplot(niv ~ m_p39_4, data = datos_niv, names = c("Sí", "No"),
+        col = c("steelblue", "coral"), main = "niv vs 39_4", ylab = "Escolaridad (niv)")
+mtext(paste("s² Sí=5.43 | No=6.20"), side = 1, line = 2, cex = 0.75)
+
+# 3. niv vs 36_2
+boxplot(niv ~ capaz_36, data = datos_niv,
+        col = c("steelblue", "coral"), main = "niv vs 36_2", ylab = "Escolaridad (niv)")
+mtext(paste("s² Capaz=5.55 | Dif=5.69"), side = 1, line = 2, cex = 0.75)
+
+# 4. m_p32 vs 38b
+boxplot(m_p32 ~ m_p38b, data = datos, names = c("Sí", "No"),
+        col = c("mediumseagreen", "gold"), main = "m_p32 vs 38b", ylab = "Velocidad (m_p32)")
+mtext(paste("s² Sí=0.77 | No=0.75"), side = 1, line = 2, cex = 0.75)
+
+# 5. m_p32 vs 38c
+boxplot(m_p32 ~ m_p38c, data = datos, names = c("Sí", "No"),
+        col = c("mediumseagreen", "gold"), main = "m_p32 vs 38c", ylab = "Velocidad (m_p32)")
+mtext(paste("s² Sí=0.75 | No=0.78"), side = 1, line = 2, cex = 0.75)
+
+# 6. Varianzas comparadas
+vars_g1 <- c(5.416, 5.430, 5.551, 0.768, 0.746)
+vars_g2 <- c(6.264, 6.204, 5.687, 0.746, 0.780)
+barplot(rbind(vars_g1, vars_g2), beside = TRUE, names.arg = paste0("P", 1:5),
+        col = c("steelblue", "coral"), main = "Comparación de s²", ylab = "Varianza")
+legend("topright", legend = c("G1", "G2"), fill = c("steelblue", "coral"), bty = "n", cex = 0.8)
+
+par(mfrow = c(1, 1))
+```
+
+---
+
+## 6. Conclusiones
+
+1. **La exigencia docente en primaria reduce la desigualdad escolar:** La prueba 1 demostró que quienes tuvieron maestros que pedían otros libros tienen una varianza significativamente menor en su escolaridad ($s^2 = 5.42$ vs $6.26$, $p = 0.0349$), agrupándose más consistentemente en grados escolares altos.
+2. **Homocedasticidad en competencias lectoras:** La velocidad de lectura (`m_p32`) no varía en dispersión por los estímulos en casa ($p > 0.49$ en ambos casos), confirmando varianzas iguales.
