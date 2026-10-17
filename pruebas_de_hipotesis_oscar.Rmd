@@ -1,5 +1,5 @@
 ---
-title: "Pruebas de hipótesis."
+title: "Pruebas de hipótesis. Oscar."
 author: "Oscar Gálvez"
 date: "2026-10-16"
 output: html_document
@@ -8,8 +8,6 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-# Planteamiento.
 
 El código es una automatización de la misma prueba de hipótesis para diferentes datos recabados según su pregunta: 1) `m_p38a`: \<\<cuando usted era niña(o), ¿sus padres o tutores le llevaban a bibliotecas o librerías?\>\>; 2) `m_p39_1`: \<\<cuando usted era niña(o), ¿en su escuela primaria, sus maestras o maestros le pedían leer otros libros además de los de texto?\>\>; 3) \<\<cuando usted era niña(o), ¿en su escuela primaria, sus maestras o maestros le animaban para visitar bibliotecas?\>\>. En las pruebas de hipótesis se busca determinar si la proporción poblacional del "Sí" (1) es igual al 50%.
 
