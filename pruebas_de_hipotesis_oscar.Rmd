@@ -1,0 +1,50 @@
+---
+title: "Pruebas de hipótesis."
+author: "Oscar Gálvez"
+date: "2026-10-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Planteamiento.
+
+El código es una automatización de la misma prueba de hipótesis para diferentes datos recabados según su pregunta: 1) `m_p38a`: \<\<cuando usted era niña(o), ¿sus padres o tutores le llevaban a bibliotecas o librerías?\>\>; 2) `m_p39_1`: \<\<cuando usted era niña(o), ¿en su escuela primaria, sus maestras o maestros le pedían leer otros libros además de los de texto?\>\>; 3) \<\<cuando usted era niña(o), ¿en su escuela primaria, sus maestras o maestros le animaban para visitar bibliotecas?\>\>. En las pruebas de hipótesis se busca determinar si la proporción poblacional del "Sí" (1) es igual al 50%.
+
+$$\begin{cases}H_0 : \quad \rho = 0.50 \\ H_1 : \quad \rho \neq 0.50\end{cases}$$
+
+Como se codifica 9 (un número) como una respuesta, se prefirió depurar la muestra estadística de todo valor que no sea 1 o 2.
+
+```{r}
+
+molec <- read.csv("Datos_molec_2025-1.csv")
+
+prueba_proporcion <- function(pregunta) {
+
+  datos <- molec[[pregunta]]
+  datos <- datos[datos %in% c(1, 2)] # Hay algunas preguntas que guardan "No recuerda" como 9, además de NAs; esta es la mejor solución.
+  
+  p_0 <- 0.50
+  
+  p <- sum(datos == 1) / length(datos)
+  SE <- sqrt(p_0 * (1 - p_0) / length(datos))
+
+  Z <- (p - p_0) / SE
+
+  valor_p <- 2 * pnorm(-abs(Z))
+
+  alpha <- 0.04
+  
+  if (valor_p <= alpha){
+    print("Se rechaza H0.")
+  } else{
+    print("No existe evidencia estadística suficiente para rechazar que H0.")
+  }
+}
+
+prueba_proporcion("m_p38a")
+prueba_proporcion("m_p39_1")
+prueba_proporcion("m_p39_4")
+```
