@@ -1,0 +1,198 @@
+---
+title: "Análisis de velocidad, comprensión e impacto de medios de consulta"
+author: "Ian Castillo A00843643"
+date: "2026-10-16"
+output:
+  word_document: default
+  html_document: default
+---
+## Importación de librerias y base de datos
+```{r}
+installed.packages("readr")
+installed.packages("fdth")
+library(fdth)
+library(readr)
+
+MOLEC <- read_csv("C:/Users/ianuc/Downloads/MOLEC_2025_limpia.csv")
+competencias <- MOLEC[, c("m_p32", "m_p33")]
+lecturaVsMedios <- MOLEC[ c("m_p35", "m_p34_1", "m_p34_2")]
+```
+
+###### Datos de velocidades de lectura
+```{r}
+table(competencias$m_p32)
+```
+###### Datos de comprensión lectora
+```{r}
+table(competencias$m_p33)
+```
+###### Datos de lectura respecto al año pasado
+```{r}
+table(lecturaVsMedios$m_p35)
+```
+###### Datos de consulta de medios impresos para buscar información de lo que lee
+```{r}
+table(lecturaVsMedios$m_p34_1)
+```
+###### Datos de consulta de medios digitales para buscar información de lo que lee
+```{r}
+table(lecturaVsMedios$m_p34_2)
+```
+
+## Cálculo de frecuencias sobre competencias lectoras
+```{r}
+nVel = sum(!is.na(competencias$m_p32))
+nVelLento = sum(!is.na((competencias[competencias$m_p32 == 1, ])$m_p32))
+
+nComp = sum(!is.na(competencias$m_p33))
+nCompMitad = sum(!is.na((competencias[competencias$m_p33 == 1, ])$m_p33)) +
+sum(!is.na((competencias[competencias$m_p33 == 2, ])$m_p33))
+
+p_lento_vel = nVelLento / nVel
+p_mitad_comp = nCompMitad / nComp
+```
+
+#### Tablas de competencias lectoras (velocidad, compensión)
+```{r}
+T_competencias <- matrix(
+c(nVel , p_lento_vel, nComp, p_mitad_comp),
+nrow = 2,
+byrow = TRUE)
+rownames(T_competencias) <- c("Velocidad de lec.", "Comprensión lec.")
+colnames(T_competencias) <- c("Num. respuestas", "| Lee lento y/o comprende menos de la mayoría")
+T_competencias
+```
+
+######## Los valores de la tabla evidencian que es posible considerar una distribución normal por el Teorema Central del Límite, ya que "n" es grande y p*n > 10 para cualquer fila.
+
+## Prueba de hipótesis de velocidad de lectura:
+#### H_1: las personas con baja velocidad de lectura representan menos de la mitad de la población
+```{r}
+alfa = 0.04
+pMinVel = 0.5 + qnorm(alfa,mean=0,sd=1)*sqrt(
+(p_lento_vel)*(1 - p_lento_vel)/nVel)
+
+T_pruebaVel <- matrix(
+  c(pMinVel, p_lento_vel),
+  nrow = 1,
+  byrow = TRUE)
+colnames(T_pruebaVel) <- c("Proporción crítica", "| Proporción que lee lento")
+T_pruebaVel
+```
+
+###### Las personas que leen lento efectivamente representan una cantidad menor a la mitad (se rechaza H_0), ya que la proporción es menor al intervalo de confianza asociado a una media de 0.5
+
+## Prueba de hipótesis de comprensión lectora:
+#### H_1: las personas que leen la mitad o menos repesentan menos de la mitad de la población
+```{r}
+pMinComp = 0.5 + qnorm(alfa,mean=0,sd=1)*sqrt(
+(p_mitad_comp)*(1 - p_mitad_comp)/nComp)
+
+T_pruebaComp <- matrix(
+  c(pMinComp, p_mitad_comp),
+  nrow = 1,
+  byrow = TRUE)
+colnames(T_pruebaVel) <- c("Proporción crítica", "| Proporción que comprende menos de la mayoría")
+T_pruebaVel
+```
+
+###### Las personas que comprenden la mitad o menos de lo que leen efectivamente representan una cantidad menor a la mitad (se rechaza H_0), ya que la proporción es menor al intervalo de confianza asociado a una media de 0.5
+
+## Intervalos de confianza (alfa = 0.04)
+#### Proporción que lee lento
+```{r}
+p_lento_vel - qnorm(1-alfa/2,mean=0,sd=1)*sqrt(
+(p_lento_vel)*(1 - p_lento_vel)/nVel)
+p_lento_vel + qnorm(1-alfa/2,mean=0,sd=1)*sqrt(
+(p_lento_vel)*(1 - p_lento_vel)/nVel)
+```
+
+#### Proporción que comprende la mitad o poco de lo que lee
+```{r}
+p_mitad_comp - qnorm(1-alfa/2,mean=0,sd=1)*sqrt(
+(p_mitad_comp)*(1 - p_mitad_comp)/nComp)
+p_mitad_comp + qnorm(1-alfa/2,mean=0,sd=1)*sqrt(
+(p_mitad_comp)*(1 - p_mitad_comp)/nComp)
+```
+
+## Cálculo de frecuencias de quienes leen más que el año pasado según el medio de consulta
+```{r}
+cambioLec_SiImp = lecturaVsMedios[lecturaVsMedios$m_p34_1 == 1, ]
+cambioLec_NoImp = lecturaVsMedios[lecturaVsMedios$m_p34_1 == 2, ]
+cambioLec_SiDig = lecturaVsMedios[lecturaVsMedios$m_p34_2 == 1, ]
+cambioLec_NoDig = lecturaVsMedios[lecturaVsMedios$m_p34_2 == 2, ]
+
+nSiImp = sum(!is.na(cambioLec_SiImp$m_p35))
+nNoImp = sum(!is.na(cambioLec_NoImp$m_p35))
+nSiDig = sum(!is.na(cambioLec_SiDig$m_p35))
+nNoDig = sum(!is.na(cambioLec_NoDig$m_p35))
+
+nMasLec_SiImp = sum(!is.na(
+(cambioLec_SiImp[cambioLec_SiImp$m_p35 == 1, ])$m_p35))
+nMasLec_NoImp = sum(!is.na(
+(cambioLec_NoImp[cambioLec_NoImp$m_p35 == 1, ])$m_p35))
+nMasLec_SiDig = sum(!is.na(
+(cambioLec_SiDig[cambioLec_SiDig$m_p35 == 1, ])$m_p35))
+nMasLec_NoDig = sum(!is.na(
+(cambioLec_NoDig[cambioLec_NoDig$m_p35 == 1, ])$m_p35))
+
+p_SI = nMasLec_SiImp / nSiImp
+p_NI = nMasLec_NoImp / nNoImp
+p_SD = nMasLec_SiDig / nSiDig
+p_ND = nMasLec_NoDig / nNoDig
+```
+
+#### Proporción que lee más que el año pasado según el medio de consulta
+```{r}
+T_cambioLec <- matrix(
+c(nSiImp , p_SI, nNoImp, p_NI, nSiDig, p_SD, nNoDig, p_ND),
+nrow = 4,
+byrow = TRUE)
+rownames(T_cambioLec) <- c("Consulta impresos", "No consulta impresos",
+"Consulta digitales", "No consulta digitales")
+colnames(T_cambioLec) <- c("Num. respuestas", "| Lee más que el año pasado")
+T_cambioLec
+```
+
+######## Los valores de la tabla evidencian que es posible considerar una distribución normal por el Teorema Central del Límite, ya que "n" es grande y p*n > 10 para cualquer fila.
+
+## Pruebas de hipótesis sobre la consulta de medios impresos:
+#### H_1: Las personas que sí consultan medios impresos leen más que el aÑo anterior
+```{r}
+difMinI = p_SI-p_NI - qnorm(1-alfa/2,mean=0,sd=1)*
+sqrt((p_SI)*(1-p_SI)/nSiImp + (p_NI)*(1-p_NI)/nNoImp)
+difI = p_SI-p_NI
+difMaxI = p_SI-p_NI + qnorm(1-alfa/2,mean=0,sd=1)*
+sqrt((p_SI)*(1-p_SI)/nSiImp + (p_NI)*(1-p_NI)/nNoImp)
+
+T_difImpreso <- matrix(
+  c(difMinI, difI, difMaxI),
+  nrow = 1,
+  byrow = TRUE)
+rownames(T_difImpreso) <- c("Dif.")
+colnames(T_difImpreso) <- c("Lim. inferor del I.C.", "Diferencia calculada", "Lim. superior del I.C.")
+
+T_difImpreso
+```
+
+###### La proporción de personas que leen más que al año anterior es mayor para quienes sí consultan más información sobre sus lecturas en medios impresos respecto a los que no emplean medios impresos para eso (se rechaza H_0). Esto se oberva porque el cero no se incluye en el intervalo.
+
+#### H_1: Las personas que sí consultan medios digitales leen más que el aÑo anterior
+```{r}
+difMinD = p_SD-p_ND - qnorm(1-alfa/2,mean=0,sd=1)*
+sqrt((p_SD)*(1-p_SD)/nSiDig + (p_ND)*(1-p_ND)/nNoDig)
+difD = p_SD-p_ND
+difMaxD = p_SD-p_ND + qnorm(1-alfa/2,mean=0,sd=1)*
+sqrt((p_SD)*(1-p_SD)/nSiDig + (p_ND)*(1-p_ND)/nNoDig)
+
+T_difDigital <- matrix(
+  c(difMinD, difD, difMaxD),
+  nrow = 1,
+  byrow = TRUE)
+rownames(T_difDigital) <- c("Dif.")
+colnames(T_difDigital) <- c("Lim. inferor del I.C.", "Diferencia calculada", "Lim. superior del I.C.")
+
+T_difDigital
+```
+
+###### La proporción de personas que leen más que al año anterior es mayor para quienes sí consultan más información sobre sus lecturas en medios digitales respecto a los que no emplean medios digitales para eso (se rechaza H_0). Esto se oberva porque el cero no se incluye en el intervalo.
