@@ -1,0 +1,202 @@
+---
+title: "Jorge Humberto Garcia Lizarraga"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r echo=FALSE}
+#:::::JORGE:::::
+#Organización del documento main con:
+	#Volver a mencionar objetivo y agregar justificación de métodos estadísticos
+	#Agregar los análsis de los otros miembros del equipo
+	#Resumen de lo logrado hasta ahora y resultados obtenidos, mencionar qué falta por hacer
+	#Liga de acceso al código
+	#Referencias
+
+#Media entre dos muestras (probar si hay diferencia)
+	#Media de edad según (edad)...
+		#si había libros en su casa VS si no había (m_p38d)
+		#si lee menos respecto al año pasado VS si no lee menos (m_p35)
+```
+
+```{r echo=FALSE}
+data <- read.csv("../Modeling Data 2025.csv")
+
+# (m_p38d), De niña(o), sin contar los libros de texto,
+# ¿había libros en su casa?, 1 = si, 2 = no
+
+# (m_p35), Con respecto a un año atrás, ¿considera que
+# lee…?, 1=más, 2=igual, 3=menos
+
+#comparacion <- data.frame(
+#  m_p38d_col = head(data$m_p38d, 20),
+#  m_p35_col = head(data$m_p35, 20),
+#  edad_col = head(data$edad, 20)
+#)
+#comparacion
+
+```
+
+Habia libros en su casa (si/no) que pertenece a la variable (m_p38d) para esto primero voy a dividir entre 2 grupos.
+
+los llamare edad_si_libros, edad_no_libros
+
+```{r echo=FALSE}
+  edad_si_libros = data$edad[data$m_p38d == 1]
+  edad_no_libros = data$edad[data$m_p38d == 2]
+  
+  x_bar_edad_si_libros = mean(edad_si_libros, na.rm = TRUE)
+  x_bar_edad_no_libros = mean(edad_no_libros, na.rm = TRUE)
+  
+  # numero edades validas tenemos de cada entrevistado osea los que no son NAN's
+  n1 = length(na.omit(edad_si_libros))
+  n2 = length(na.omit(edad_no_libros))
+  
+  var1 = var(edad_si_libros, na.rm = TRUE)
+  var2 = var(edad_no_libros, na.rm = TRUE)
+  
+  sd1 = sqrt(var1)
+  sd2 = sqrt(var2)
+  
+  data.frame(
+    habia_libros_casa = c("si","no"),
+    num_valido_entrevistados = c(n1,n2),
+    media_entrevistados = c(round(x_bar_edad_si_libros), round(x_bar_edad_no_libros)),
+    desviacion_standard = c(sd1, sd2)
+  )
+```
+
+| Habia Libros en su casa | Media Muestral           |
+|-------------------------|--------------------------|
+| Si                      | `r x_bar_edad_si_libros` |
+| No                      | `r x_bar_edad_no_libros` |
+
+Como el objetivo es probar si hay diferencia de la media de edad entre los que si tenian libros en casa y los que no, primero identifico que estamos trabajando con poblaciones normales, varianzas poblacionales desconocidas y diferentes, la hipotesis nula es:
+
+$$ H_0: \mu_{edad \,si\, libros} = \mu_{edad \, no \, libros}$$
+Se propone que:
+$$ H_1: \mu_{edad \,si\, libros} \ne \mu_{edad \, no \, libros}$$
+
+Usaremos la aproximacion de Welch-Satterthwaite:
+
+$$t = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s^2_1}{n_1} + \frac{s^2_2}{n_2}}}$$
+donde $s^2_1 y s^2_2$ son varianzas muestrales observadas, propongo un $\alpha = 0.04$.
+
+
+$$\hat{v} = \frac{(\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2})^2}{\frac{(s_1^2/n_1)^2}{n_1 - 1} + \frac{(s^2_2/n_2)^2}{n_2 -1}}$$
+```{r}
+#error standard 
+alpha = 0.04
+ee = sqrt(var1/n1 + var2/n2)
+t_obs = (x_bar_edad_si_libros - x_bar_edad_no_libros) / ee
+
+
+nu = (var1/n1 + var2/n2)^2 / ((var1/n1)^2/(n1-1) + (var2/n2)^2/(n2-1))
+
+t_crit = qt(alpha/2, nu, lower.tail = TRUE)
+p = 2 * pt(t_obs, nu)
+
+dif = x_bar_edad_si_libros - x_bar_edad_no_libros
+ic_inf = dif - t_crit * ee
+ic_sup = dif + t_crit * ee
+
+cat(t_obs, p, t_crit, nu, dif, ic_inf, ic_sup)
+```
+Como $t_{obs} > t_{crit}$ y $p < \alpha$ entonces se rechaza $H_0$, con un 96% de confianza podemos decir que la media poblacional de edades de personas que si leen libros es diferente a los que no leen libros.
+
+Se calculo el intervalo de confianza:
+
+$$
+\left((\bar{x}-\bar{y})-t_{1-\alpha/2,\,\hat{\nu}}\sqrt{\frac{s_X^2}{n}+\frac{s_Y^2}{m}},\;\; (\bar{x}-\bar{y})+t_{1-\alpha/2,\,\hat{\nu}}\sqrt{\frac{s_X^2}{n}+\frac{s_Y^2}{m}}\right)
+$$
+El IC obtenido para $\mu_{edad \, si \, libros} - \mu_{edad \, no \, libros}$ fue: $\bigg(`r round(ic_inf,2)`,`r round(ic_sup,2)`\bigg)$ podemos decir que con 96% de confianza quienes tenian libros en casa tienen una edad promedio entre 8 y 10 años menor que quienes no tenian, y podemos ver que el intervalo no contiene el 0, con lo que concuerda con el rechazo de $H_0$.
+\newpage
+Considera que lee mas respecto a un año atrás. (más, igual, menos) que pertenece a la variable (m_p35).
+
+```{r echo=FALSE}
+  edad_lee_mas = data$edad[data$m_p35 ==1]
+  edad_lee_igual = data$edad[data$m_p35 == 2]
+  edad_lee_menos = data$edad[data$m_p35 == 3]
+  
+  n1 = length(na.omit(edad_lee_mas))
+  n2 = length(na.omit(edad_lee_igual))
+  n3 = length(na.omit(edad_lee_menos))
+  
+  var1 = var(edad_lee_mas, na.rm = TRUE)
+  var2 = var(edad_lee_igual, na.rm = TRUE)
+  var3 = var(edad_lee_menos, na.rm = TRUE)
+  
+  sd1 = sqrt(var1); sd2 = sqrt(var2); sd3 = sqrt(var3)
+  
+  x_bar_edad_lee_mas = mean(edad_lee_mas, na.rm = TRUE)
+  x_bar_edad_lee_igual = mean(edad_lee_igual, na.rm = TRUE)
+  x_bar_edad_lee_menos = mean(edad_lee_menos, na.rm = TRUE)
+  
+   data.frame(
+     lee_respecto_un_año = c("mas","igual","menos"),
+     num_valido_entrevistados = c(n1,n2,n3),
+     media_entrevistados = c(round(x_bar_edad_lee_mas),round(x_bar_edad_lee_igual),round(x_bar_edad_lee_menos)),
+     desviacion_standard = c(sd1,sd2,sd3)
+   )
+```
+
+| Frecuencia de lectura con respecto a un año atras. | Media Muestral |
+|------------------------------------------------------|------------------|
+| mas | `r x_bar_edad_lee_mas` |
+| igual | `r x_bar_edad_lee_igual` |
+| menos | `r x_bar_edad_lee_menos` |
+
+Luego de visualizar los datos agrupe en 2 categorias edad_nomenos, edad_menos por que consistian de 3 respuestas.
+
+```{r}
+edad_no_menos = data$edad[data$m_p35 %in% c(1, 2)]
+edad_menos = data$edad[data$m_p35 == 3]
+
+n1 = length(na.omit(edad_no_menos))
+n2 = length(na.omit(edad_menos))
+
+x_bar_no_menos = mean(edad_no_menos, na.rm = TRUE)
+x_bar_menos    = mean(edad_menos, na.rm = TRUE)
+
+var1 = var(edad_no_menos, na.rm = TRUE)
+var2 = var(edad_menos, na.rm = TRUE)
+
+sd1 = sqrt(var1); sd2 = sqrt(var2)
+
+data.frame(
+     lee_respecto_un_año = c("no menos","menos"),
+     num_valido_entrevistados = c(n1,n2),
+     media_entrevistados = round(c(x_bar_no_menos,x_bar_menos)),
+     desviacion_standard = round(c(sd1,sd2),2)
+   )
+```
+```{r}
+a  = var1 / n1
+b  = var2 / n2
+ee = sqrt(a + b)
+
+t_obs = (x_bar_no_menos - x_bar_menos) / ee
+nu = (a + b)^2 / (a^2/(n1 - 1) + b^2/(n2 - 1))
+
+alpha = 0.04
+
+t_crit = qt(1 - alpha/2, df = nu)
+p = 2 * pt(-abs(t_obs), df = nu)
+
+dif = x_bar_no_menos - x_bar_menos
+ic_inf = dif - t_crit * ee
+ic_sup = dif + t_crit * ee
+
+cat(t_crit, t_obs, p, alpha, dif, ic_inf, ic_sup)
+```
+Como $t_{obs} > t_{crit}$ y $p < \alpha$ entonces se rechaza $H_0$, con un 96% de confianza podemos decir que la media poblacional de personas que no leen menos con respecto a un año atras y los que leen menos con respecto a un año atras son diferentes.
+
+Se calculo el intervalo de confianza para determinar que tanto:
+
+$$
+\left((\bar{x}-\bar{y})-t_{1-\alpha/2,\,\hat{\nu}}\sqrt{\frac{s_X^2}{n}+\frac{s_Y^2}{m}},\;\; (\bar{x}-\bar{y})+t_{1-\alpha/2,\,\hat{\nu}}\sqrt{\frac{s_X^2}{n}+\frac{s_Y^2}{m}}\right)
+$$
+El IC obtenido para $\mu_{edad \, no \, menos} - \mu_{edad \, menos}$ fue: $\bigg(`r round(ic_inf,2)`,`r round(ic_sup,2)`\bigg)$ con 96% de confianza quienes no disminuyeron la lectura con respecto a hace un año tienen una edad menor entre 5 y 2 años, que si la disminuyeron,y cabe recalcar que tiene sentido el rechazo de $H_0$ ya que no contiene el 0.
+
+

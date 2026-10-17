@@ -17,7 +17,8 @@ cat("Se analizan las siguientes variables: m_p34_1, m_p34_2, m_p35\n",
   "m_p34_1 - acustumbra consultar medios impresos como diccionarios o enciclopedias?\n",
   "m_p34_2 - acostumbra consultar medios digitales como diccionarios virtuales, paginas de internet (Google, Wikipedia) o inteligencia artificial?\n",
     
-  "Se responde 1 = lee mas, 2 = lee igual, 3 = lee meno\n")
+  "Se responde 1 = lee mas, 2 = lee igual, 3 = lee meno\n",
+  "m_p35" - )
   
 ```
 
