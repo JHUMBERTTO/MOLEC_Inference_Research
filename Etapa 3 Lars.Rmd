@@ -1,0 +1,158 @@
+---
+title: "Lars_Etapa3"
+author: "Lars Alexander Lotze Garza A01572651"
+date: "2026-10-16"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Proporcion entre dos muestras y un IC para la varianza de las edades
+
+En esta seccion se encontrara y probara lo siguiente:
+
+- Probabilidad de graduarte de nivel profesional cuando (niv)... 
+sus padres los llevaban a bibliotecas VS cuando no (m_p38a)
+- Probabilidad de comprender lo que se lee cuando (m_p33)...
+había una cantidad considerable de libros en casa VS cuando no (m_p38d_1)
+- Un intervalo de confianza para la varianza de las edades para juzgar 
+correctamente el analisis.
+		
+# Lectura y estandarizacion de variables
+
+```{r}
+datos <- read.csv("MOLEC_2025_limpia.csv")
+var_rev <- datos[, c("niv", "m_p38a", "m_p33", "m_p38d_1", "edad")]
+# Estandarizacion de la variable nivel
+niv <- var_rev[, 1]
+label_nivEdu <- c(
+"2" = "Primaria",
+"3" = "Secundaria",
+"4" = "Normal",
+"5" = "Técnica con secu.",
+"6" = "Preparatoria",
+"7" = "Técnica con prepa.",
+"8" = "Profesional",
+"9" = "Especialidad",
+"10" = "Maestría",
+"11" = "Doctorado",
+"99" = "No especificado")
+niv_factor <- factor(niv,
+levels = c(2,3,4,5,6,7,8,9,10,11,99),
+labels = label_nivEdu)
+
+# Estandarizacion m_p38a
+m_p38a <- var_rev[, 2]
+p38a_factor <- factor(m_p38a, levels = c(1,2), labels = c("Si", "No"))
+
+# Estandarizacion m_p33
+p33 <- var_rev[, 3]
+p33_factor <- factor(p33, levels = c(1, 2, 3, 4), labels = c("poca", "la mitad", "la mayor parte", "toda"))
+
+# Estandarizacion m_p38d_1
+m_p38d <- var_rev[, 4]
+p38d_factor <- factor(m_p38d, levels = c(1,2,3,4,5,9), labels = c("de 1 a 25", "de 26 a 50", "de 51 a 75", "de 76 a 100", "mas de 100", "No recuerda"))
+```
+
+## Tablas de frecuencia para ambos casos
+
+```{r}
+# Tabla para nivel de escolaridad vs ir a bibliotecas
+niv_p38a_cruz <- table(niv_factor, p38a_factor)
+print(niv_p38a_cruz)
+cat("\nProporcion para quienes se graduaron de nivel profesional y si los llevaban a bibliotecas: ", "338", "/","847")
+cat("\nProporcion para quienes se graduaron de nivel profesional y no los llevaban a bibliotecas: ", "350", "/","1169")
+```
+
+```{r}
+# Tabla para compresion de lectura vs cantidad de libros
+p33_p38d_cruz <- table(p33_factor, p38d_factor)
+print(p33_p38d_cruz)
+cat("\nProporcion de personas con buena comprension y menos de 51 libros: ", sum(p33_p38d_cruz[4,1], p33_p38d_cruz[4,2], p33_p38d_cruz[3,1], p33_p38d_cruz[3,2]), "/", sum(p33_p38d_cruz[,1], p33_p38d_cruz[,2]))
+cat("\nProporcion de personas con buena comprension y mas de 50 libros: ", sum(p33_p38d_cruz[4, 3], p33_p38d_cruz[4, 4], p33_p38d_cruz[4, 5], p33_p38d_cruz[3, 3], p33_p38d_cruz[3, 4], p33_p38d_cruz[3, 5]), "/", sum(p33_p38d_cruz[,3], p33_p38d_cruz[,4], p33_p38d_cruz[,5]))
+```
+
+# Planteamiento de las pruebas de hipotesis
+
+Para ambas se consideraron las mismas pruebas de hipotesis ya que se quiere evaluar lo mismo (si es que una proporcion es mucho mayor que la otra), para lograrlo, se hizo al 95% de confianza con $\alpha = 0.05$.
+
+Se plantea como hipotesis nula:
+$$H_0 : p_1 - p_2 \leq 0 $$
+
+Como hipotesis alternativa:
+$$H_1 : p_1 - p_2 > 0$$
+
+Esto implica hacer una prueba de hipotesis de una sola cola, cargada hacia la derecha.
+
+# Pruebas de Hipotesis
+
+## Prueba de hipotesis 1 (nivel de escolaridad alcanzado vs si lo llevaron a bibliotecas o no)
+
+Sea $\hat{p_1} = \frac{338}{847}$ la cantidad de personas que se graduaron de nivel profesional que iban a bibliotecas y $\hat{p_2} = \frac{350}{1169}$ la proporcion de personas que no iban a bibliotecas y se graduaron del nivel profesional.
+
+Se estandarizo el estadistico puesto a prueba de la siguiente manera:
+
+$$Z = \frac {\hat{p_1} - \hat{p_2}}{\sqrt{\frac{\hat{p_1}(1-\hat{p_1})}{n}+\frac{\hat{p_2}(1-\hat{p_2})}{m}}} = \frac{\frac{338}{847} - \frac{350}{1169}}{\sqrt{\frac{\frac{338}{847}(1-\frac{338}{847})}{847}+\frac{\frac{350}{1169}(1-\frac{350}{1169})}{1169}}}$$
+
+```{r}
+stat_1 <- (338/847 - 350/1169)/sqrt(((338/847*(1-338/847)) / 847)+((350/1169*(1-350/1169)) / 1169))
+valorp_1 <- 1 - pnorm(stat_1)
+cat("Valor p: ", valorp_1)
+```
+
+Como el valor-p es menor a $0.05$, se rechaza la hipótesis nula ($H_0$). Existe evidencia estadística contundente para afirmar que la proporción de personas que se graduaron de nivel profesional es mayor en el grupo cuyos padres los llevaban a bibliotecas que en el grupo que no. 
+
+## Prueba de hipotesis 2 (Compresion lectora vs la cantidad de libros en casa)
+
+Sea $\hat{p_1} = \frac{250}{273}$ la cantidad de personas que tienen buena comprension lectora y tenia una cantidad de libros mayor o igual a 51 en la infancia y $\hat{p_2} = \frac{1268}{1730}$ la cantidad de personas que tienen una buena comprension lectora y tenia una cantidad de libros menor o igual a 50 en la infancia.
+
+Se calculo su estadistico Z de la siguiente manera: 
+
+$$Z = \frac {\hat{p_1} - \hat{p_2}}{\sqrt{\frac{\hat{p_1}(1-\hat{p_1})}{n}+\frac{\hat{p_2}(1-\hat{p_2})}{m}}} = \frac{\frac{250}{273} - \frac{1268}{1730}}{\sqrt{\frac{\frac{250}{273}(1-\frac{250}{273})}{273}+\frac{\frac{1268}{1730}(1-\frac{1268}{1730})}{1730}}}$$
+
+```{r}
+stat_2 <- (250/273 - 1268/1730) / sqrt(((250/273*(1-250/273)) / 273)+((1268/1730*(1-1268/1730)) / 1730))
+valorp_2 <- 1 - pnorm(stat_2)
+cat("Valor p: ", valorp_2)
+```
+
+Se concluye lo mismo para esta prueba: 
+
+Como el valor-p es menor a $0.05$, se rechaza la hipótesis nula ($H_0$). Existe evidencia estadística contundente para afirmar que la proporción de personas que tenian mas de 50 libros en su casa tienen mas probabilidades de tener una buena comprension lectora. 
+
+En este caso es aun mas sorprendente, la diferencia entre las proporciones es tanta que el valor-p es leido por el programa como cero, aunque tambien se pueden comparar el estadistico y el valor frontera donde si $Z > Z_\alpha$ entonces cae en la zona de rechazo. En este caso tenemos valores $Z = 9.19$ y $Z_\alpha = 1.645$, como se puede observar el estadistico es mucho mayor y cae en la zona de rechazo. 
+
+# Intervalo de Confianza de la varianza de las edades
+
+Como este analisis de proporcion toca un aspecto importante que es el nivel de escolaridad alcanzado y lo relaciona con diferentes variables, tambien es posible que simplemente la mayoria de la poblacion tienda a tener edades mas bajas. Por eso se hace este pequeño apartado de analisis. 
+
+Para estimar la varianza de una población con distribución normal a partir de una muestra de tamaño $n$, el Intervalo de Confianza al $(1-\alpha)\%$ para la varianza poblacional ($\sigma^2$) se calcula mediante la distribución Chi-cuadrada ($\chi^2$) con $df = n - 1$ grados de libertad:$$IC(\sigma^2) = \left[ \frac{(n - 1)s^2}{\chi^2_{\alpha/2, \, n-1}}, \; \frac{(n - 1)s^2}{\chi^2_{1 - \alpha/2, \, n-1}} \right]$$
+
+Para la desviacion estandar sera:
+
+$$IC(\sigma) = \left[ \sqrt{\frac{(n - 1)s^2}{\chi^2_{\alpha/2, \, n-1}}}, \; \sqrt{\frac{(n - 1)s^2}{\chi^2_{1 - \alpha/2, \, n-1}}} \right]$$
+
+Para un 95% de confianza
+
+```{r}
+edades <- var_rev[,5]
+media_edad <- mean(edades)
+var_edad <- var(edades)
+desv_edad <- sqrt(var_edad)
+
+#IC para la varianza
+df <- length(edades) - 1
+IC_inf_var <- df*var_edad / qchisq(0.975, df)
+IC_sup_var <- df*var_edad / qchisq(0.025, df)
+
+# IC para la desviacion estandar 
+IC_inf_sd <- sqrt(IC_inf_var)
+IC_sup_sd <- sqrt(IC_sup_var)
+
+cat("IC para la varianza: ", "[", IC_inf_var, ",", IC_sup_var, "]\n",
+    "IC para la desviacion estandar: ", "[", IC_inf_sd, ",", IC_sup_sd, "]\n")
+```
+
+La estimación de la desviación estándar poblacional en un rango de $16.72$ a $17.78$ años evidencia una alta heterogeneidad y dispersión en la estructura por edades de las personas encuestadas. Las pruebas de proporciones quedan sustentadas, ya que garantiza que la oportunidad de haber alcanzado el nivel educativo Profesional o de haber tenido acceso a bibliotecas y libros durante la infancia está evaluada sobre una población con suficiente madurez y diversidad de historias de vida, aportando robustez a las conclusiones sobre el impacto de los hábitos tempranos de lectura.
